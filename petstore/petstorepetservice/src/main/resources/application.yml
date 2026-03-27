@@ -28,6 +28,11 @@ management:
     diskspace:
       enabled: false
 
+
+azure:
+  application-insights:
+    instrumentation-key: ${PETSTORESERVICES_AI_INSTRUMENTATION_KEY}
+
 data:
   pets:
     - id: 1

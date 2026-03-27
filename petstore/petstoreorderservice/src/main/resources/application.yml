@@ -37,3 +37,8 @@ logging:
   level:
     root: INFO
     com.chtrembl: DEBUG
+
+
+azure:
+  application-insights:
+    instrumentation-key: ${PETSTORESERVICES_AI_INSTRUMENTATION_KEY}

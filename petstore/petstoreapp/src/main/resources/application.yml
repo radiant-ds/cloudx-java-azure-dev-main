@@ -67,3 +67,7 @@ logging:
     com.chtrembl.petstoreapp: INFO
     com.azure.monitor.opentelemetry.autoconfigure.implementation.quickpulse.QuickPulsePingSender: ERROR
     com.azure.core.http.netty.NettyAsyncHttpClient: ERROR
+
+azure:
+  application-insights:
+    instrumentation-key: ${PETSTOREAPP_AI_INSTRUMENTATION_KEY}
