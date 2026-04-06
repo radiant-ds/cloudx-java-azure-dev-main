@@ -15,6 +15,12 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.List;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.Meter;
+
 import static com.chtrembl.petstoreapp.config.Constants.CATEGORY;
 import static com.chtrembl.petstoreapp.config.Constants.OPERATION;
 import static com.chtrembl.petstoreapp.config.Constants.REQUEST_ID;
@@ -44,6 +50,12 @@ public class ProductManagementService {
 
         try {
             this.sessionUser.getTelemetryClient().trackEvent(
+                    String.format("PetStoreApp user %s is requesting to retrieve products from the ProductService" +
+                                    ", sessionID %s",
+                            this.sessionUser.getName(), this.sessionUser.getSessionId()),
+                    this.sessionUser.getCustomEventProperties(), null);
+
+            this.sessionUser.getTelemetryClient().trackEvent(
                     String.format("PetStoreApp user %s is requesting to retrieve products from the ProductService",
                             this.sessionUser.getName()),
                     this.sessionUser.getCustomEventProperties(), null);
@@ -65,6 +77,13 @@ public class ProductManagementService {
 
             log.info("Successfully retrieved {} products for category {} with tags {} [RequestID: {}, TraceID: {}]",
                     products.size(), category, tags, requestId, traceId);
+
+            log.info("PetStoreApp: {} products were returned from the ProductService", products.size());
+            Meter meter = GlobalOpenTelemetry.getMeter("PetStore.AzureMonitor.Demo");
+            DoubleHistogram histogram = meter.histogramBuilder("histogram").build();
+            histogram.record(products.size(),
+                    Attributes.of(AttributeKey.stringKey("name"), "products", AttributeKey.stringKey("value"), "size"));
+
 
             return products;
         } catch (FeignException fe) {
