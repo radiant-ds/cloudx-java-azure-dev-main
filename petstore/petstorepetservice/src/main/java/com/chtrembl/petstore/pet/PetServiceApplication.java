@@ -7,9 +7,16 @@ import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import com.microsoft.applicationinsights.attach.ApplicationInsights;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 @SpringBootApplication
 public class PetServiceApplication implements CommandLineRunner {
+
+	private static final String AI_CONNECTION_STRING_ENV = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+	private static final String APPLICATIONINSIGHTS_ENABLED = "APPLICATIONINSIGHTS_ENABLED";
 
 	@Bean
 	public ContainerEnvironment containerEnvvironment() {
@@ -29,6 +36,7 @@ public class PetServiceApplication implements CommandLineRunner {
 	}
 
 	public static void main(String[] args) throws Exception {
+		configureApplicationInsights();
         new SpringApplication(PetServiceApplication.class).run(args);
 	}
 
@@ -40,5 +48,28 @@ public class PetServiceApplication implements CommandLineRunner {
 			return 10;
 		}
 
+	}
+
+	private static void configureApplicationInsights() {
+		String aiEnabledStr = System.getenv(APPLICATIONINSIGHTS_ENABLED);
+		boolean aiEnabled = !"false".equalsIgnoreCase(aiEnabledStr); // Default: true
+
+		if (!aiEnabled) {
+			log.info("Application Insights DISABLED via APPLICATIONINSIGHTS_ENABLED environment variable");
+			return;
+		}
+
+		String connectionString = System.getenv(AI_CONNECTION_STRING_ENV);
+
+		if (StringUtils.isNotBlank(connectionString)) {
+			try {
+				ApplicationInsights.attach();
+				log.info("Application Insights enabled successfully");
+			} catch (Exception e) {
+				log.warn("Failed to attach Application Insights: {}", e.getMessage());
+			}
+		} else {
+			log.info("Application Insights not configured (no connection string found). Please set the {} environment variable with correct connection string.", AI_CONNECTION_STRING_ENV);
+		}
 	}
 }
